@@ -58,6 +58,22 @@ class LineDetectorNode(DTROS):
         self._colors = rospy.get_param("~colors", None)
         self._img_size = rospy.get_param("~img_size", None)
         self._top_cutoff = rospy.get_param("~top_cutoff", None)
+        #####################
+        # # print("top_cutoff = ", self._top_cutoff)
+        # # self.logerr(f"top_cutoff: {self._top_cutoff}")
+        ###################################################
+        ###################################################
+        self._colors = {'RED': {'low_1': [0, 140, 100], 'high_1': [15, 255, 255], 'low_2': [165, 140, 100], 'high_2': [180, 255, 255]}, \
+                        'WHITE': {'low': [0, 0, 150], 'high': [180, 100, 255]}, \
+                        'YELLOW': {'low': [16, 84, 80], 'high': [55, 255, 255]}}
+        ###################################################
+        ###################################################
+        color_dict = '\n'.join([f"{key}: {value}" for key, value in self._colors.items()])
+        param_dict = '\n'.join([f"{key}: {value}" for key, value in self._line_detector_parameters.items()])
+        # rospy.loginfo(f"Dictionary content: {dict_str}")
+        self.log("\n************************\n" + "self._colors: " + color_dict + "\n************************\n", "error")
+        self.log("\n************************\n" + "self._line_detector_parameters: " + param_dict + "\n************************\n", "error")
+        #####################
 
         self.bridge = CvBridge()
 
@@ -139,16 +155,28 @@ class LineDetectorNode(DTROS):
             return
 
         # Perform color correction
+        ##########################################
+        # self.log("\n############################################\n" + \
+        #          "self.ai_thresholds_received: " + str(self.ai_thresholds_received) + "\n" + \
+        #          "self.anti_instagram_thresholds[lower]" + str(self.anti_instagram_thresholds["lower"]) + "\n" + \
+        #          "self.anti_instagram_thresholds[higher]" + str(self.anti_instagram_thresholds["higher"]) + "\n" + \
+        #          "############################################\n", "error")
+        ##########################################
         if self.ai_thresholds_received:
             image = self.ai.apply_color_balance(
                 self.anti_instagram_thresholds["lower"], self.anti_instagram_thresholds["higher"], image
             )
+        ###########################################
 
         # Resize the image to the desired dimensions
         height_original, width_original = image.shape[0:2]
         img_size = (self._img_size[1], self._img_size[0])
         if img_size[0] != width_original or img_size[1] != height_original:
             image = cv2.resize(image, img_size, interpolation=cv2.INTER_NEAREST)
+
+        #######################################
+        # image_top = image[: self._top_cutoff, :, :]
+        #######################################
         image = image[self._top_cutoff :, :, :]
 
         # Extract the line segments for every color

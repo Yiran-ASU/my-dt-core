@@ -206,6 +206,11 @@ class LaneControllerNode(DTROS):
             dt = current_s - self.last_s
 
         if self.at_stop_line or self.at_obstacle_stop_line:
+            ###############################
+            # self.log("\n###############################################\n", "error")
+            # self.log("self.at_stop_line in lane_controller_node: " + self.at_stop_line, "error")
+            # self.log("\n###############################################\n", "error")
+            ###############################
             v = 0
             omega = 0
         else:
@@ -216,11 +221,14 @@ class LaneControllerNode(DTROS):
 
             # We cap the error if it grows too large
             if np.abs(d_err) > self.params["~d_thres"]:
-                self.log("d_err too large, thresholding it!", "error")
+                # self.log("d_err too large, thresholding it!", "error")
                 d_err = np.sign(d_err) * self.params["~d_thres"]
             
             if phi_err > self.params["~theta_thres_max"].value or phi_err < self.params["~theta_thres_min"].value:
-                self.log("phi_err too large/small, thresholding it!", "error")
+                ####################
+                # self.log("phi_err too large/small, thresholding it!" + str(phi_err), "error")
+                ####################
+                # self.log("phi_err too large/small, thresholding it! phi_err = " + str(phi_err) + " max = " + str(self.params["~theta_thres_max"].value) + " min = " + str(self.params["~theta_thres_min"].value), "error")
                 phi_err = np.maximum(self.params["~theta_thres_min"].value, np.minimum(phi_err, self.params["~theta_thres_max"].value))
 
             wheels_cmd_exec = [self.wheels_cmd_executed.vel_left, self.wheels_cmd_executed.vel_right]
@@ -245,6 +253,11 @@ class LaneControllerNode(DTROS):
         car_control_msg.header = pose_msg.header
 
         # Add commands to car message
+        #########################################
+        # if self.at_stop_line or self.at_obstacle_stop_line:
+        #     self.log("v: " + str(v), "error")
+        #     self.log("omega: " + str(omega), "error")
+        #########################################
         car_control_msg.v = v
         car_control_msg.omega = omega
 

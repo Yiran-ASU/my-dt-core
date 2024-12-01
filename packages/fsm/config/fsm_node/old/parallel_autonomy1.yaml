@@ -12,7 +12,7 @@ events: #Maps from subscribing topic to singal ids
     msg_type: "BoolStamped"
     trigger: False
   at_stop_line:
-    topic: "stop_line_filter_node/at_stop_line"
+    topic: "traffic_light_filter_node/at_stop_line"
     msg_type: "BoolStamped"
     trigger: True
   intersection_go:
@@ -39,7 +39,7 @@ nodes:
   static_object_detector_node: "static_object_detector_node/switch"
   line_detector_node: "line_detector_node/switch"
   lane_filter_node: "lane_filter_node/switch"
-  stop_line_filter_node: "stop_line_filter_node/switch"
+  stop_line_filter_node: "traffic_light_filter_node/switch"
 
 # Define state transitions
 states:
@@ -56,7 +56,7 @@ states:
       - static_object_detector_node
       - lane_filter_node
       - line_detector_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - anti_instagram_node
 
     lights: ["joystick"]
@@ -72,7 +72,7 @@ states:
       - static_object_detector_node
       - lane_filter_node
       - line_detector_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - anti_instagram_node
     lights: ["joystick"]
   WAITING_ON_TURN_DIRECTION:
@@ -83,7 +83,7 @@ states:
       - static_object_detector_node
       - lane_filter_node
       - line_detector_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - anti_instagram_node
 
     lights: ["joystick"]
@@ -96,7 +96,7 @@ states:
       - static_object_detector_node
       - lane_filter_node
       - line_detector_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - anti_instagram_node
 
     lights: ["joystick"]

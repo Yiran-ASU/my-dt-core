@@ -63,6 +63,8 @@ class LineDetectorNode(DTROS):
         # # self.logerr(f"top_cutoff: {self._top_cutoff}")
         ###################################################
         ###################################################
+        # for traffic light detection, we only care about the top left region
+        self._left_cutoff = 55
         self._colors = {'RED': {'low_1': [0, 140, 100], 'high_1': [15, 255, 255], 'low_2': [165, 140, 100], 'high_2': [180, 255, 255]}, \
                         'WHITE': {'low': [0, 0, 150], 'high': [180, 100, 255]}, \
                         'YELLOW': {'low': [16, 84, 80], 'high': [55, 255, 255]}}
@@ -87,6 +89,12 @@ class LineDetectorNode(DTROS):
 
         # Create a new LineDetector object with the parameters from the Parameter Server / config file
         self.detector = LineDetector(**self._line_detector_parameters)
+
+        ##########################################################
+        # Create another LineDetector object for the top image
+        self.detector_top = LineDetector(**self._line_detector_parameters)
+        ##########################################################
+
         # Update the color ranges objects
         self.color_ranges = {color: ColorRange.fromDict(d) for color, d in list(self._colors.items())}
 
@@ -94,9 +102,23 @@ class LineDetectorNode(DTROS):
         self.pub_lines = rospy.Publisher(
             "~segment_list", SegmentList, queue_size=1, dt_topic_type=TopicType.PERCEPTION
         )
+
+        ##################################################################################
+        self.pub_lines_top = rospy.Publisher(
+            "~segment_list_top", SegmentList, queue_size=1, dt_topic_type=TopicType.PERCEPTION
+        )
+        ##################################################################################
+
         self.pub_d_segments = rospy.Publisher(
             "~debug/segments/compressed", CompressedImage, queue_size=1, dt_topic_type=TopicType.DEBUG
         )
+
+        ################################################################
+        self.pub_d_segments_top = rospy.Publisher(
+            "~debug/segments_top/compressed", CompressedImage, queue_size=1, dt_topic_type=TopicType.DEBUG
+        )
+        ################################################################
+
         self.pub_d_edges = rospy.Publisher(
             "~debug/edges/compressed", CompressedImage, queue_size=1, dt_topic_type=TopicType.DEBUG
         )
@@ -175,8 +197,9 @@ class LineDetectorNode(DTROS):
             image = cv2.resize(image, img_size, interpolation=cv2.INTER_NEAREST)
 
         #######################################
-        # image_top = image[: self._top_cutoff, :, :]
+        image_top = image[: self._top_cutoff, : self._left_cutoff, :]
         #######################################
+
         image = image[self._top_cutoff :, :, :]
 
         # Extract the line segments for every color
@@ -185,9 +208,24 @@ class LineDetectorNode(DTROS):
             color: self.detector.detectLines(ranges) for color, ranges in list(self.color_ranges.items())
         }
 
+        #######################################################
+        # Extract the line segments from the top image
+        self.detector_top.setImage(image_top)
+        detections_top = {
+            'RED': self.detector_top.detectLines(self.color_ranges['RED'])
+        }
+        ########################################################
+
+
         # Construct a SegmentList
         segment_list = SegmentList()
         segment_list.header.stamp = image_msg.header.stamp
+
+        ########################################################
+        # Construct a SegmentList for the top image
+        segment_list_top = SegmentList()
+        segment_list_top.header.stamp = image_msg.header.stamp
+        ########################################################
 
         # Remove the offset in coordinates coming from the removing of the top part and
         arr_cutoff = np.array([0, self._top_cutoff, 0, self._top_cutoff])
@@ -217,6 +255,31 @@ class LineDetectorNode(DTROS):
         # Publish the message
         self.pub_lines.publish(segment_list)
 
+        ######################################################################
+        # Fill in the segment_list_top with the detected red segments
+        if len(detections_top["RED"].lines) > 0 and len(detections_top["RED"].normals) > 0:
+            try:
+                color_id_top = getattr(Segment, "RED")
+                lines_normalized_top = (detections_top["RED"].lines + arr_cutoff) * arr_ratio
+                segment_list_top.segments.extend(
+                    self._to_segment_msg(lines_normalized_top, detections_top["RED"].normals, color_id_top)
+                )
+            except AttributeError:
+                self.logerr(f"Color name RED is not defined in the Segment message")
+        # else:
+        #     try:
+        #         color_id_top = getattr(Segment, "RED")
+        #         lines_normalized_top = np.array([])
+        #         segment_list_top.segments.extend(
+        #             self._to_segment_msg(lines_normalized_top, np.array([]), color_id_top)
+        #         )
+        #     except AttributeError:
+        #         self.logerr(f"Color name RED is not defined in the Segment message")
+
+        # Publish the message for the top image
+        self.pub_lines_top.publish(segment_list_top)
+        ######################################################################
+
         # If there are any subscribers to the debug topics, generate a debug image and publish it
         if self.pub_d_segments.get_num_connections() > 0:
             colorrange_detections = {self.color_ranges[c]: det for c, det in list(detections.items())}
@@ -224,6 +287,13 @@ class LineDetectorNode(DTROS):
             debug_image_msg = self.bridge.cv2_to_compressed_imgmsg(debug_img)
             debug_image_msg.header = image_msg.header
             self.pub_d_segments.publish(debug_image_msg)
+
+        if self.pub_d_segments_top.get_num_connections() > 0:
+            colorrange_detections = {self.color_ranges[c]: det for c, det in list(detections_top.items())}
+            debug_img = plotSegments(image_top, colorrange_detections)
+            debug_image_msg = self.bridge.cv2_to_compressed_imgmsg(debug_img)
+            debug_image_msg.header = image_msg.header
+            self.pub_d_segments_top.publish(debug_image_msg)
 
         if self.pub_d_edges.get_num_connections() > 0:
             debug_image_msg = self.bridge.cv2_to_compressed_imgmsg(self.detector.canny_edges)

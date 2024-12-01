@@ -12,7 +12,7 @@ class IndefNavigationNode:
         veh_name = self.node_name.split("/")[1]
         wheel_topic = "/" + veh_name + "/joy_mapper_node/car_cmd"
         lane_topic = "/" + veh_name + "/lane_filter_node/lane_pose"
-        stop_topic = "/" + veh_name + "/stop_line_filter_node/stop_line_reading"
+        stop_topic = "/" + veh_name + "/traffic_light_filter_node/stop_line_reading"
 
         self.lane = None
         self.stop = None

@@ -1,6 +1,6 @@
 events:
   at_stop_line:
-    topic: "stop_line_filter_node/at_stop_line"
+    topic: "traffic_light_filter_node/at_stop_line"
     msg_type: "BoolStamped"
     trigger: True
   velocity_zero: 

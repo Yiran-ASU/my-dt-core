@@ -18,7 +18,7 @@ class KinematicsTestNode(unittest.TestCase):
         veh_name = rospy.get_param("~veh", "")
         wheel_topic = "/" + veh_name + "/joy_mapper_node/car_cmd"
         lane_topic = "/" + veh_name + "/lane_filter_node/lane_pose"
-        stop_topic = "/" + veh_name + "/stop_line_filter_node/stop_line_reading"
+        stop_topic = "/" + veh_name + "/traffic_light_filter_node/stop_line_reading"
 
         rospy.loginfo("wheel topic = %s", wheel_topic)
         rospy.loginfo("lane topic = %s", lane_topic)

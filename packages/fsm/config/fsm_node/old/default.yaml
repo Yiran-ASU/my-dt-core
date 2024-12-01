@@ -30,7 +30,7 @@ events: # Maps from subscribing topic to signal ids
     trigger: True
 
   at_stop_line:
-    topic: "stop_line_filter_node/at_stop_line"
+    topic: "traffic_light_filter_node/at_stop_line"
     msg_type: "BoolStamped"
     trigger: True
 
@@ -149,7 +149,7 @@ nodes:
   static_object_detector_node: "static_object_detector_node/switch"
   line_detector_node: "line_detector_node/switch"
   lane_filter_node: "lane_filter_node/switch"
-  stop_line_filter_node: "stop_line_filter_node/switch"
+  stop_line_filter_node: "traffic_light_filter_node/switch"
   framerate_high: "camera_node/framerate_high_switch"
   # extras added
 
@@ -189,7 +189,7 @@ states:
     active_nodes:
       - lane_filter_node
       - line_detector_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - framerate_high
       - decoder_node
     lights: ["joystick"]
@@ -206,7 +206,7 @@ states:
       - line_detector_node
       - lane_filter_node
       - lane_controller_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
     lights: ["joystick"]
     current_status: "implemented"
   LANE_FOLLOWING:
@@ -224,7 +224,7 @@ states:
     #  - apriltag_node # NOTE no reason for this?
       - lane_filter_node
       - lane_controller_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - obstacle_detection_node
       - obstacle_avoidance_node
       - vehicle_filter_node
@@ -295,7 +295,7 @@ states:
       - apriltag_node
       - lane_filter_node
       - lane_controller_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - obstacle_avoidance_node
       - vehicle_filter_node
       - vehicle_detection_node
@@ -311,7 +311,7 @@ states:
       - apriltag_node
       - lane_filter_node
       - lane_controller_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - obstacle_avoidance_node
       - vehicle_filter_node
       - vehicle_detection_node
@@ -333,7 +333,7 @@ states:
 #       - static_object_detector_node
 #       - lane_filter_node
 #       - line_detector_node
-#       - stop_line_filter_node
+#       - traffic_light_filter_node
 # >>>>>>> devel-implicit-coord-jan15-intersection-coord
 #       - decoder_node
 #       - apriltag_node
@@ -362,7 +362,7 @@ states:
       - decoder_node
       - apriltag_node
       - line_detector_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
       - duckiebot_il_lane_following
 
   CALIBRATING:
@@ -376,7 +376,7 @@ states:
       - apriltag_node
       - lane_filter_node
       - lane_controller_node
-      - stop_line_filter_node
+      - traffic_light_filter_node
 
   CALIBRATING_CALC:
     transitions:

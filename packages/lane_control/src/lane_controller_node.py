@@ -96,6 +96,11 @@ class LaneControllerNode(DTROS):
         self.obstacle_stop_line_detected = False
         self.at_obstacle_stop_line = False
 
+        #########################################
+        # whether the red light is detected in the top image
+        self.red_light_detected_top = False
+        #########################################
+
         self.current_pose_source = "lane_filter"
 
         # Construct publishers
@@ -120,6 +125,13 @@ class LaneControllerNode(DTROS):
         self.sub_stop_line = rospy.Subscriber(
             "~stop_line_reading", StopLineReading, self.cbStopLineReading, queue_size=1
         )
+
+        ################################################################
+        self.sub_traffic_light = rospy.Subscriber(
+            "~traffic_light_reading", StopLineReading, self.cbTrafficLightReading, queue_size=1
+        )
+        ################################################################
+
         self.sub_obstacle_stop_line = rospy.Subscriber(
             "~obstacle_distance_reading", StopLineReading, self.cbObstacleStopLineReading, queue_size=1
         )
@@ -135,7 +147,8 @@ class LaneControllerNode(DTROS):
         """
         self.obstacle_stop_line_distance = np.sqrt(msg.stop_line_point.x**2 + msg.stop_line_point.y**2)
         self.obstacle_stop_line_detected = msg.stop_line_detected
-        self.at_stop_line = msg.at_stop_line
+        self.at_obstacle_stop_line = msg.at_stop_line
+
 
     def cbStopLineReading(self, msg):
         """Callback storing current distance to the next stopline, if one is detected.
@@ -145,7 +158,15 @@ class LaneControllerNode(DTROS):
         """
         self.stop_line_distance = np.sqrt(msg.stop_line_point.x**2 + msg.stop_line_point.y**2)
         self.stop_line_detected = msg.stop_line_detected
-        self.at_obstacle_stop_line = msg.at_stop_line
+        self.at_stop_line = msg.at_stop_line
+
+    def cbTrafficLightReading(self, msg):
+        """Callback storing current distance to the next stopline, if one is detected.
+
+        Args:
+            msg (:obj:`StopLineReading`): Message containing information about the next traffic light.
+        """
+        self.red_light_detected_top = msg.stop_line_detected
 
     def cbMode(self, fsm_state_msg):
 
@@ -205,7 +226,16 @@ class LaneControllerNode(DTROS):
         if self.last_s is not None:
             dt = current_s - self.last_s
 
-        if self.at_stop_line or self.at_obstacle_stop_line:
+        ################################################################
+        # self.log("\n***********************************************************8\n"+\
+        #          "is at stop line: " + str(self.at_stop_line) + \
+        #          "is red light detected in the top image: " + str(self.red_light_detected_top) + \
+        #          "is at obstacle stop line: " + str(self.at_obstacle_stop_line) + \
+        #          "test: " + str((self.at_stop_line and self.red_light_detected_top) or self.at_obstacle_stop_line) + \
+        #          "\n***********************************************************8\n", "error")
+        ##################################################################
+
+        if (self.at_stop_line and self.red_light_detected_top) or self.at_obstacle_stop_line:
             ###############################
             # self.log("\n###############################################\n", "error")
             # self.log("self.at_stop_line in lane_controller_node: " + self.at_stop_line, "error")
